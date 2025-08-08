@@ -1,0 +1,54 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources << /ProcSet [/PDF /Text] /Font << /F1 5 0 R >> >>
+>>
+endobj
+4 0 obj
+<< /Length 59 >>
+stream
+BT
+/F1 24 Tf
+100 700 Td
+(Relatorio de Testes de QA) Tj
+ET
+BT
+/F1 12 Tf
+100 650 Td
+(Status | Total) Tj
+100 630 Td
+(Passou | 100) Tj
+100 610 Td
+(Falhou | 10) Tj
+100 590 Td
+(Bloqueado | 5) Tj
+100 570 Td
+(Nao Executado | 20) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /MacRomanEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000056 00000 n
+0000000111 00000 n
+0000000293 00000 n
+0000000353 00000 n
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+499
+%%EOF
+

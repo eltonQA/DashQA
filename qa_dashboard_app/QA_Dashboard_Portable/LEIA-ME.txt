@@ -1,0 +1,57 @@
+# QA Dashboard App - Pacote Portável
+
+## Instalação e Configuração
+
+### Pré-requisitos
+- Python 3.8 ou superior
+- Java (para tabula-py)
+- Tesseract OCR (opcional, para PDFs escaneados)
+
+### Instalação das Dependências
+1. Execute `Instalar_Dependencias.bat` ou
+2. Execute manualmente: `pip install -r requirements.txt`
+
+## Como Usar
+
+### Opção 1: Executável (se disponível)
+- Execute `QA_Dashboard_App.exe`
+
+### Opção 2: Scripts Python
+- **Dashboard Interativo**: Execute `Iniciar_Dashboard.bat` ou `python app.py dashboard`
+- **Agendador Automático**: Execute `Iniciar_Agendador.bat` ou `python app.py scheduler`
+- **Teste de Processamento**: Execute `Testar_Processamento.bat` ou `python app.py test`
+
+## Estrutura de Pastas
+
+```
+QA_Dashboard_Portable/
+├── QA_Dashboard_App.exe     # Executável (se disponível)
+├── app.py                   # Script principal
+├── dashboard.py             # Dashboard Streamlit
+├── scheduler.py             # Agendador automático
+├── src/                     # Módulos de processamento
+├── input_pdfs/              # Coloque PDFs aqui para processamento automático
+├── processed_data/          # CSVs processados são salvos aqui
+└── input_pdfs/processed/    # PDFs processados são movidos para aqui
+```
+
+## Funcionalidades
+
+✓ **Dashboard Interativo**
+  - Upload de PDFs via interface web
+  - Visualização de KPIs e gráficos
+  - Exportação para CSV
+
+✓ **Processamento Automático**
+  - Agendamento diário de processamento
+  - Monitoramento de pasta de entrada
+  - Processamento em lote
+
+✓ **Extração Robusta**
+  - Múltiplas técnicas de extração (PyPDF2, pdfplumber, tabula-py)
+  - Suporte a OCR para PDFs escaneados
+  - Fallback automático entre métodos
+
+## Suporte
+
+Para problemas ou dúvidas, consulte a documentação completa no arquivo README.md principal.
