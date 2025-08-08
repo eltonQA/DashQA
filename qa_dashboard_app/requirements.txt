@@ -1,5 +1,4 @@
 # QA Dashboard App - Requisitos Python
-
 # Core dependencies
 pandas>=2.0.0
 numpy>=1.26.0
@@ -9,7 +8,7 @@ tabula-py>=2.8.0
 
 # OCR support
 pytesseract>=0.3.10
-pdf2image>=1.1.0
+pdf2image<=1.17.0
 Pillow>=10.0.0
 
 # Dashboard and visualization
@@ -20,5 +19,4 @@ plotly>=5.15.0
 schedule>=1.2.0
 
 # Optional: For better Java integration with tabula-py
-# jpype1>=1.4.0
-
+jpype1>=1.4.0
