@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 QA Dashboard App - Aplicativo para análise de métricas de QA a partir de PDFs
 """
@@ -98,7 +97,7 @@ def main():
     """Função principal do aplicativo"""
     parser = argparse.ArgumentParser(
         description="QA Dashboard App - Aplicativo para análise de métricas de QA",
-        add_help=False
+      add_help=False
     )
     parser.add_argument(
         'command', 
