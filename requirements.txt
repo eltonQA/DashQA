@@ -9,8 +9,8 @@ google-generativeai
 
 # OCR support
 pytesseract>=0.3.10
-pdf2image<=1.17.0
-Pillow>=10.0.0
+pdf2image
+Pillow>=7.1.0
 
 # Dashboard and visualization
 streamlit>=1.2.0
@@ -18,6 +18,9 @@ plotly>=5.15.0
 
 # Scheduling
 schedule>=1.2.0
+
+# Google dependencies
+google-generativeai
 
 # Optional: For better Java integration with tabula-py
 jpype1>=1.4.0

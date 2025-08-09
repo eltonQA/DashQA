@@ -2,77 +2,122 @@ import pandas as pd
 
 def process_extracted_data(extracted_data):
     df_status = pd.DataFrame()
-    df_tables = pd.DataFrame()
     kpis = {}
-    df_grouped_by_category = pd.DataFrame()
+    grouped_data = pd.DataFrame()
 
-    if extracted_data["tables"]:
-        # Assumindo que a primeira tabela encontrada é a tabela de status
-        # Isso precisa ser mais robusto para PDFs do mundo real
-        status_table_data = extracted_data["tables"][0]
-        if status_table_data and len(status_table_data) > 1:
-            header = status_table_data[0]
-            data_rows = status_table_data[1:]
-            try:
-                df_status = pd.DataFrame(data_rows, columns=header)
-                
-                # Verifica se a coluna 'Total' existe antes de tentar convertê-la
-                if "Total" in df_status.columns:
-                    df_status["Total"] = pd.to_numeric(df_status["Total"], errors='coerce').fillna(0)
-                else:
-                    # Se a coluna não for encontrada, imprime um aviso e define o DataFrame como vazio para evitar erros
-                    print("Aviso: Coluna 'Total' não encontrada no DataFrame de status.")
-                    df_status = pd.DataFrame()
+    tables = extracted_data["tables"]
+    text_data = extracted_data["text"]
 
-            except Exception as e:
-                print(f"Erro ao criar df_status a partir da tabela extraída: {e}")
+    status_keywords = ["Passou", "Falhado", "Bloqueado", "Não Executado"]
+    status_counts = {keyword: 0 for keyword in status_keywords}
 
+    # Try to find status data from tables first
+    for table in tables:
+        for row in table:
+            for cell in row:
+                if cell:
+                    for keyword in status_keywords:
+                        if keyword.lower() in cell.lower():
+                            status_counts[keyword] += 1
+
+    # Convert status_counts to a DataFrame
+    if any(status_counts.values()):
+        df_status = pd.DataFrame(list(status_counts.items()), columns=["Status", "Total"])
+        df_status = df_status[df_status["Total"] > 0] # Only include statuses that were found
+    else:
+        # Fallback to previous text-based extraction if no tables found or relevant columns are missing
+        # This part is for the \'example.pdf\' format
+        lines = text_data.split("\n")
+        status_data = []
+        table_header_found = False
+        for line in lines:
+            line = line.strip()
+            if "Status | Total" in line:
+                table_header_found = True
+                continue
+            if table_header_found and line:
+                parts = line.split("|")
+                if len(parts) == 2:
+                    status = parts[0].strip()
+                    try:
+                        total = int(parts[1].strip())
+                        status_data.append([status, total])
+                    except ValueError:
+                        pass # Ignore lines where Total is not a number
+        if status_data:
+            df_status = pd.DataFrame(status_data, columns=["Status", "Total"])
+
+    # Calculate KPIs
     if not df_status.empty:
         total_cases = df_status["Total"].sum()
-        passed_cases = df_status[df_status["Status"] == "Passou"]["Total"].sum()
-        executed_cases = df_status[df_status["Status"].isin(["Passou", "Falhou", "Bloqueado"])]["Total"].sum()
+        passed_cases = df_status[df_status["Status"].str.contains("Passou", case=False)]["Total"].sum()
+        executed_cases = df_status[~df_status["Status"].str.contains("Não Executado", case=False)]["Total"].sum()
 
-        kpis["Total de Casos de Teste"] = total_cases
-        kpis["Casos Passados"] = passed_cases
-        kpis["Casos Executados"] = executed_cases
-        kpis["Percentual de Execucao"] = (executed_cases / total_cases * 100) if total_cases > 0 else 0
-        kpis["Percentual de Sucesso"] = (passed_cases / executed_cases * 100) if executed_cases > 0 else 0
-    else:
-        # Define os KPIs como zero se o DataFrame estiver vazio
-        kpis["Total de Casos de Teste"] = 0
-        kpis["Casos Passados"] = 0
-        kpis["Casos Executados"] = 0
-        kpis["Percentual de Execucao"] = 0
-        kpis["Percentual de Sucesso"] = 0
+        percent_execution = (executed_cases / total_cases) * 100 if total_cases > 0 else 0
+        percent_success = (passed_cases / executed_cases) * 100 if executed_cases > 0 else 0
+
+        kpis = {
+            "Total de Casos de Teste": total_cases,
+            "Casos Passados": passed_cases,
+            "Casos Executados": executed_cases,
+            "Percentual de Execucao": percent_execution,
+            "Percentual de Sucesso": percent_success
+        }
 
     return {
         "df_status": df_status,
-        "df_tables": df_tables,
         "kpis": kpis,
-        "df_grouped_by_category": df_grouped_by_category
+        "grouped_data": grouped_data # Placeholder for now
     }
 
 if __name__ == "__main__":
-    from pdf_extractor import extract_data_from_pdf
-    import os
+    # This part is for testing the data_processor independently
+    # You would typically call process_extracted_data from dashboard.py
+    # For a quick test, let\'s simulate some extracted data
+    sample_extracted_data = {
+        "text": "",
+        "tables": [
+            # Sample table structure from TestLink1.9.20[fixed].pdf
+            [
+                ["#:", "Ações do Passo:", "Resultados Esperados::", "Estado da\nExecução:"],
+                ["1", "Dado que o usuário sincroniza os pedidos\nQuando o usuário entra na tela de “Meus\npedidos”", "Então o banner aparece conforme\nfigma.", "Passou"]
+            ],
+            # Another sample table with \'Resultado da Execução:\'
+            [
+                ["Build", "SP49_C1", None, None],
+                ["Testador", "mateus.sandes", None, None],
+                ["Resultado da Execução:", "Falhado", None, None],
+                ["Modo de Execução:", "Manual", None, None]
+            ]
+        ],
+        "ocr_text": ""
+    }
 
-    dummy_pdf_path = "example.pdf"
-    if not os.path.exists(dummy_pdf_path):
-        print(f"Por favor, coloque um arquivo PDF chamado '{dummy_pdf_path}' no diretório atual para testes.")
-    else:
-        print(f"Extraindo dados de {dummy_pdf_path}...")
-        extracted_data = extract_data_from_pdf(dummy_pdf_path)
-        processed_data = process_extracted_data(extracted_data)
+    processed_data = process_extracted_data(sample_extracted_data)
+    print("--- Processed Status Data ---")
+    print(processed_data["df_status"])
+    print("--- Calculated KPIs ---")
+    print(processed_data["kpis"])
 
-        print("\n--- Processed Status Data ---")
-        print(processed_data["df_status"])
+    # Test with the original example.pdf format
+    print("\n--- Testing with example.pdf format ---")
+    example_text_data = """
+Relatorio de Testes de QA
+Status | Total
+Passou | 100
+Falhou | 10
+Bloqueado | 5
+Nao Executado | 20
+"""
+    sample_extracted_data_example = {
+        "text": example_text_data,
+        "tables": [],
+        "ocr_text": ""
+    }
+    processed_data_example = process_extracted_data(sample_extracted_data_example)
+    print("--- Processed Status Data (example.pdf) ---")
+    print(processed_data_example["df_status"])
+    print("--- Calculated KPIs (example.pdf) ---")
+    print(processed_data_example["kpis"])
 
-        print("\n--- Processed Tables Data (if any) ---")
-        print(processed_data["df_tables"])
 
-        print("\n--- Calculated KPIs ---")
-        for k, v in processed_data["kpis"].items():
-            print(f"{k}: {v}")
-
-        print("\n--- Grouped by Category Data (Placeholder) ---")
-        print(processed_data["df_grouped_by_category"])

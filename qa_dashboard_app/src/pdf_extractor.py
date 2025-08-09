@@ -7,6 +7,7 @@ import pytesseract
 import os
 from pdf2image import convert_from_path
 import re
+import sys
 
 def extract_text_from_pdf(pdf_path):
     text = ""
@@ -19,46 +20,56 @@ def extract_text_from_pdf(pdf_path):
 def extract_tables_from_pdf(pdf_path):
     tables = []
     
-    # Prioritize parsing from raw text for simple cases (like our example.pdf)
-    text_data = extract_text_from_pdf(pdf_path)
-    
-    # Regex to find lines like 'Status | Total' and then data rows like 'Passou | 100'
-    # This regex is more specific to the example PDF format and handles concatenated lines
-    match = re.search(r'Status\s*\|\s*Total(.*)', text_data, re.DOTALL | re.IGNORECASE)
-    if match:
-        table_content = match.group(1)
-        lines = table_content.split('\n')
+    # Try with pdfplumber first
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                page_tables = page.extract_tables()
+                if page_tables:
+                    for table in page_tables:
+                        # Filter out empty rows/columns and ensure data integrity
+                        cleaned_table = []
+                        for row in table:
+                            cleaned_row = [cell.replace('\n', ' ') if cell else '' for cell in row]
+                            if any(cell.strip() for cell in cleaned_row):
+                                cleaned_table.append(cleaned_row)
+                        if cleaned_table:
+                            tables.append(cleaned_table)
+    except Exception as e:
+        print(f"pdfplumber failed: {e}")
+
+    # Fallback to tabula-py if pdfplumber finds no tables or if it fails
+    if not tables:
+        try:
+            # Ensure Java is in PATH or JAVA_HOME is set for tabula-py
+            os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-17-openjdk-amd64"
+            tables_tabula = tabula.read_pdf(pdf_path, pages='all', multiple_tables=True, stream=True, guess=False, lattice=True)
+            for df in tables_tabula:
+                tables.append(df.values.tolist())
+        except Exception as e:
+            print(f"Tabula-py failed as fallback: {e}")
+
+    # If still no tables, try to parse from raw text for simple cases (like our example.pdf)
+    if not tables:
+        text_data = extract_text_from_pdf(pdf_path)
+        lines = text_data.split('\n')
         status_data = []
-        status_data.append(["Status", "Total"])
+        table_header_found = False
         for line in lines:
             line = line.strip()
-            if re.search(r'(\w+)\s*\|\s*(\d+)', line):
+            if re.match(r'Status\s*\|\s*Total', line, re.IGNORECASE):
+                table_header_found = True
+                status_data.append(["Status", "Total"])
+                continue
+            if table_header_found and re.search(r'(\w+)\s*\|\s*(\d+)', line):
                 parts = re.findall(r'(\w+)\s*\|\s*(\d+)', line)
                 for status, total in parts:
                     status_data.append([status, total])
+            elif table_header_found and not line: 
+                table_header_found = False
 
         if len(status_data) > 1: 
             tables.append(status_data)
-
-    # Fallback to pdfplumber and tabula-py for more complex PDFs if no tables found from text
-    if not tables:
-        try:
-            with pdfplumber.open(pdf_path) as pdf:
-                for page in pdf.pages:
-                    page_tables = page.extract_tables()
-                    if page_tables:
-                        for table in page_tables:
-                            df = [row for row in table if any(cell.strip() if cell else '' for cell in row)]
-                            if df:
-                                tables.append(df)
-        except Exception as e:
-            print(f"pdfplumber failed: {e}")
-
-    if not tables:
-        try:
-            tables = tabula.read_pdf(pdf_path, pages='all', multiple_tables=True, stream=True)
-        except Exception as e:
-            print(f"Tabula-py failed as fallback: {e}")
 
     return tables
 
@@ -92,13 +103,17 @@ def extract_data_from_pdf(pdf_path):
     return extracted_data
 
 if __name__ == "__main__":
-    dummy_pdf_path = "example.pdf"
-    if not os.path.exists(dummy_pdf_path):
-        print(f"Please place a PDF file named '{dummy_pdf_path}' in the current directory for testing.")
-        print("You can also modify the 'dummy_pdf_path' variable to point to an existing PDF.")
+    if len(sys.argv) > 1:
+        pdf_to_process = sys.argv[1]
     else:
-        print(f"Extracting data from {dummy_pdf_path}...")
-        data = extract_data_from_pdf(dummy_pdf_path)
+        pdf_to_process = "example.pdf"
+
+    if not os.path.exists(pdf_to_process):
+        print(f"Please place a PDF file named '{pdf_to_process}' in the current directory for testing.")
+        print("You can also modify the 'pdf_to_process' variable to point to an existing PDF.")
+    else:
+        print(f"Extracting data from {pdf_to_process}...")
+        data = extract_data_from_pdf(pdf_to_process)
         print("\n--- Extracted Text ---")
         print(data["text"])
         print("\n--- Extracted Tables ---")
@@ -106,3 +121,5 @@ if __name__ == "__main__":
             print(f"Table {i+1}:\n{table}\n")
         print("\n--- Extracted OCR Text ---")
         print(data["ocr_text"])
+
+
