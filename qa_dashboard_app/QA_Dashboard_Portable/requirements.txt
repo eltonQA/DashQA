@@ -1,26 +1,23 @@
 # QA Dashboard App - Requisitos Python
-
 # Core dependencies
-pandas>=1.4.0
-numpy>=1.23.0
-
-# PDF processing
-PyPDF2>=3.0.0
-pdfplumber>=0.7.0
-tabula-py>=2.5.0
+pandas>=2.0.0
+numpy>=1.26.0
+pypdf2>=3.0.0
+pdfplumber>=0.11.0
+tabula-py>=2.8.0
+google-generativeai
 
 # OCR support
 pytesseract>=0.3.10
-pdf2image>=3.1.0
-Pillow>=7.1.0
+pdf2image<=1.17.0
+Pillow>=10.0.0
 
 # Dashboard and visualization
-streamlit>=1.28.0
+streamlit>=1.2.0
 plotly>=5.15.0
 
 # Scheduling
 schedule>=1.2.0
 
 # Optional: For better Java integration with tabula-py
-# jpype1>=1.4.0
-
+jpype1>=1.4.0
