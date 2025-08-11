@@ -1,13 +1,34 @@
 """
 QA Dashboard App - Aplicativo para análise de métricas de QA a partir de PDFs
 """
-
 import os
 import sys
 import argparse
 import subprocess
 from pathlib import Path
 
+def run_dashboard():
+    """Executa o dashboard Streamlit"""
+    print("Iniciando QA Dashboard...")
+    print("O dashboard será aberto no seu navegador padrão.")
+    print("Pressione Ctrl+C para parar o aplicativo.")
+    
+    try:
+        # Change to the app directory
+        app_dir = Path(__file__).parent
+        os.chdir(app_dir)
+        
+        # Run Streamlit
+        subprocess.run([
+            sys.executable, "-m", "streamlit", "run", "dashboard.py",
+            "--server.port", "8501",
+            "--server.address", "localhost",
+            "--browser.gatherUsageStats", "false"
+        ])
+    except KeyboardInterrupt:
+        print("\nAplicativo encerrado pelo usuário.")
+    except Exception as e:
+        print(f"Erro ao executar o dashboard: {e}")
 def run_scheduler():
     """Executa o agendador de processamento automático"""
     print("Iniciando agendador de processamento automático...")
@@ -97,4 +118,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
