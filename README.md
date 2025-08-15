@@ -1,6 +1,6 @@
 # QA Dashboard App
 
-Aplicativo desktop para análise automatizada de métricas de Quality Assurance (QA) a partir de arquivos PDF.
+Aplicativo para análise automatizada de métricas de Quality Assurance (QA) a partir de arquivos PDF.
 
 ## 🚀 Características Principais
 
